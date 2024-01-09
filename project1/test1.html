@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            margin: auto;
+            background-image:url('https://th.bing.com/th/id/OIG.7vjnU.hSWW.iGlGiWbLM?w=1024&h=1024&rs=1&pid=ImgDetMain');
+            background-size: 400px 600px;
+            
+        }
+    </style>
+    <title>Flappy Bird</title>
+</head>
+<body>
+    <canvas id="flappyBirdCanvas" width="400" height="600"></canvas>
+
+    <script>
+        const canvas = document.getElementById('flappyBirdCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const bird = {
+            x: 50,
+            y: canvas.height / 2 - 10, 
+            radius: 10, 
+            color: '#FFD700',
+            velocity: 0,
+            gravity: 0.1, 
+            jumpStrength: 5, 
+        };
+        const pipes = [];
+        const pipeWidth = 30;
+        const pipeGap = 250; 
+        const pipeSpeed = 1; 
+        const pipeColor = '#008000';
+
+        let score = 0;
+
+        function drawBird() {
+            ctx.beginPath();
+            ctx.arc(bird.x, bird.y, bird.radius, 0, Math.PI * 2);
+            ctx.fillStyle = bird.color;
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function drawPipe(pipeX, pipeHeight) {
+            ctx.fillStyle = pipeColor;
+            ctx.fillRect(pipeX, 0, pipeWidth, pipeHeight);
+            ctx.fillRect(pipeX, pipeHeight + pipeGap, pipeWidth, canvas.height - (pipeHeight + pipeGap));
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawBird();
+
+            for (let i = 0; i < pipes.length; i++) {
+                const pipeX = pipes[i].x;
+                const pipeHeight = pipes[i].height;
+
+                drawPipe(pipeX, pipeHeight);
+
+                if (
+                    bird.x + bird.radius > pipeX &&
+                    bird.x - bird.radius < pipeX + pipeWidth &&
+                    (bird.y - bird.radius < pipeHeight || bird.y + bird.radius > pipeHeight + pipeGap)
+                ) {
+                    alert('Game Over! Your score: ' + score);
+                    resetGame();
+                }
+
+                if (pipeX + pipeWidth < bird.x - bird.radius && !pipes[i].scored) {
+                    score++;
+                    pipes[i].scored = true;
+                }
+
+                pipes[i].x -= pipeSpeed;
+
+                if (pipeX + pipeWidth < 0) {
+                    pipes.splice(i, 1);
+                    i--;
+                }
+            }
+
+            bird.velocity += bird.gravity;
+            bird.y += bird.velocity;
+
+            if (bird.y + bird.radius > canvas.height) {
+                alert('Game Over! Your score: ' + score);
+                resetGame();
+            }
+
+            requestAnimationFrame(draw);
+        }
+
+        function resetGame() {
+            bird.y = canvas.height / 2 - 10; 
+            bird.velocity = 0;
+            pipes.length = 0;
+            score = 0;
+        }
+
+        function spawnPipe() {
+            const pipeHeight = Math.floor(Math.random() * (canvas.height - pipeGap * 2)) + pipeGap;
+            pipes.push({ x: canvas.width + pipeWidth, height: pipeHeight, scored: false });
+        }
+
+        document.addEventListener('keydown', () => {
+            bird.velocity = -bird.jumpStrength;
+        });
+
+        spawnPipe();
+        spawnPipe();
+        spawnPipe();
+
+        draw();
+        setInterval(spawnPipe, 4000);
+    </script>
+</body>
+</html>
